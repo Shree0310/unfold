@@ -34,38 +34,42 @@ export function MoodboardGenerator() {
   }, [messages]);
 
   const handleSubmit = async (customPrompt?: string) => {
-    const finalPrompt = customPrompt || input;
-    if (!finalPrompt.trim()) return;
+  const finalPrompt = customPrompt || input;
+  if (!finalPrompt.trim()) return;
 
-    // Add user message
-    const userMessage: Message = { role: 'user', content: finalPrompt };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput('');
-    setIsGenerating(true);
+  // Add user message
+  const userMessage: Message = { role: 'user', content: finalPrompt };
+  setMessages((prev) => [...prev, userMessage]);
+  setInput('');
+  setIsGenerating(true);
 
-    try {
-      const result = await generateMoodboard(finalPrompt);
+  try {
+    // Get all cards at once (existing behavior)
+    const result = await generateMoodboard(finalPrompt);
 
-      // Add assistant message with cards
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: 'Here\'s your moodboard',
-        cards: result,
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
-      console.error('Error generating moodboard:', error);
+    // Add EMPTY assistant message first (this creates the container)
+    setMessages((prev) => [...prev, { 
+      role: 'assistant', 
+      content: '', 
+      cards: [] 
+    }]);
 
-      // Add error message
-      const errorMessage: Message = {
-        role: 'assistant',
-        content: 'Sorry, I encountered an error generating your moodboard. Please try again.',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    // Now simulate streaming the cards in one-by-one
+    await simulateStreaming(result);
+
+  } catch (error) {
+    console.error('Error generating moodboard:', error);
+
+    // Add error message
+    const errorMessage: Message = {
+      role: 'assistant',
+      content: 'Sorry, I encountered an error generating your moodboard. Please try again.',
+    };
+    setMessages((prev) => [...prev, errorMessage]);
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -73,6 +77,23 @@ export function MoodboardGenerator() {
       handleSubmit();
     }
   };
+
+  const simulateStreaming = async (cards: MoodboardCard[]) => {
+  for (let i = 0; i < cards.length; i++) {
+    await new Promise(resolve => setTimeout(resolve, 800)); // 800ms delay
+    
+    setMessages((prev) => {
+      const lastMsg = prev[prev.length - 1];
+      return [
+        ...prev.slice(0, -1),
+        { 
+          ...lastMsg, 
+          cards: cards.slice(0, i + 1) // Add one more card
+        }
+      ];
+    });
+  }
+};
 
   const renderCard = (card: MoodboardCard, index: number) => {
     if (card.type === 'palette') {

@@ -42,15 +42,18 @@ export function MoodboardGenerator() {
     try {
       const result = await generateMoodboard(finalPrompt);
 
-      // Convert to positioned cards with staggered grid layout
+      // Convert to positioned cards with centered grid layout
       const positionedCards: PositionedCard[] = result.map((card, index) => {
-        // Create a nice grid layout with some offset
+        // Create a nice grid layout centered on the board
         const col = index % 2;
         const row = Math.floor(index / 2);
+        // Start from center of viewport minus half the grid width
+        const startX = (window.innerWidth / 2) - 450; // Center for 2-column grid (900px total)
+        const startY = 100; // Top padding
         return {
           id: `card-${Date.now()}-${index}`,
-          x: col * 450 + 50,
-          y: row * 300 + 50,
+          x: startX + (col * 450),
+          y: startY + (row * 300),
           data: card,
         };
       });
@@ -184,8 +187,10 @@ export function MoodboardGenerator() {
         {[...Array(skeletonCount)].map((_, index) => {
           const col = (cards.length + index) % 2;
           const row = Math.floor((cards.length + index) / 2);
-          const x = col * 450 + 50;
-          const y = row * 300 + 50;
+          const startX = (typeof window !== 'undefined' ? window.innerWidth / 2 : 800) - 450;
+          const startY = 100;
+          const x = startX + (col * 450);
+          const y = startY + (row * 300);
 
           return (
             <div

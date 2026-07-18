@@ -1,7 +1,5 @@
 'use client';
 
-import { BaseCard } from './BaseCard';
-
 interface FontPairCardProps {
   headingFont: string;
   bodyFont: string;
@@ -10,29 +8,21 @@ interface FontPairCardProps {
 
 export function FontPairCard({ headingFont, bodyFont, rationale }: FontPairCardProps) {
   return (
-    <BaseCard>
-      <div className="space-y-5">
-        <div>
-          <h3 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-2">
-            Typography
-          </h3>
-          <h2 className="text-2xl font-bold text-amber-900">Font Pairing</h2>
-        </div>
-
-        <div className="space-y-5 py-5 border-y border-amber-200">
-          <div>
-            <p className="text-xs text-amber-700 uppercase tracking-wider mb-3 font-semibold">Heading</p>
-            <p className="text-3xl font-bold text-amber-900">{headingFont}</p>
-          </div>
-
-          <div>
-            <p className="text-xs text-amber-700 uppercase tracking-wider mb-3 font-semibold">Body</p>
-            <p className="text-xl text-amber-800">{bodyFont}</p>
-          </div>
-        </div>
-
-        <p className="text-amber-900 leading-relaxed text-sm">{rationale}</p>
+    <div style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '20px', padding: '22px', boxShadow: '0 8px 24px rgba(120,53,15,0.10)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9333ea', marginBottom: '6px' }}>
+        Typography
       </div>
-    </BaseCard>
+      <div style={{ fontSize: '28px', fontWeight: 700, color: '#78350f', marginBottom: '8px', fontFamily: headingFont }}>
+        {headingFont}
+      </div>
+      <div style={{ fontSize: '16px', color: '#b45309', fontFamily: bodyFont }}>
+        {bodyFont}
+      </div>
+      {rationale && (
+        <div style={{ fontSize: '13px', color: '#92400e', marginTop: '12px', lineHeight: '1.5' }}>
+          {rationale}
+        </div>
+      )}
+    </div>
   );
 }

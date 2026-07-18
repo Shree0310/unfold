@@ -1,7 +1,5 @@
 'use client';
 
-import { BaseCard } from './BaseCard';
-
 interface PaletteCardProps {
   name: string;
   colors: string[];
@@ -10,31 +8,22 @@ interface PaletteCardProps {
 
 export function PaletteCard({ name, colors, description }: PaletteCardProps) {
   return (
-    <BaseCard>
-      <div className="space-y-5">
-        <div>
-          <h3 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-2">
-            Palette
-          </h3>
-          <h2 className="text-2xl font-bold text-amber-900">{name}</h2>
-        </div>
-
-        <div className="flex gap-3">
-          {colors.map((color, index) => (
-            <div key={index} className="flex-1 space-y-3">
-              <div
-                className="w-full h-24 rounded-xl shadow-sm"
-                style={{ backgroundColor: color }}
-              />
-              <p className="text-xs font-mono text-amber-800 text-center font-semibold">
-                {color.toUpperCase()}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <p className="text-amber-900 leading-relaxed text-sm">{description}</p>
+    <div style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '20px', padding: '22px', boxShadow: '0 8px 24px rgba(120,53,15,0.10)', height: '100%' }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#d97706', marginBottom: '6px' }}>
+        Color palette
       </div>
-    </BaseCard>
+      <div style={{ fontSize: '21px', fontWeight: 700, color: '#78350f', marginBottom: '14px' }}>
+        {name}
+      </div>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {colors.map((color, index) => (
+          <div
+            key={index}
+            style={{ flex: 1, height: '80px', borderRadius: '12px', backgroundColor: color, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
+            title={color}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

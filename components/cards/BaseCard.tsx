@@ -19,7 +19,9 @@ export function BaseCard({ children, className = '' }: BaseCardProps) {
         damping: 25,
         duration: 0.5,
       }}
+      drag={false}
       className={`rounded-2xl bg-white p-6 shadow-md border border-amber-200 hover:shadow-xl transition-shadow ${className}`}
+      style={{ pointerEvents: 'auto', userSelect: 'none' }}
     >
       {children}
     </motion.div>

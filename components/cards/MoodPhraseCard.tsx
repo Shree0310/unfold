@@ -1,33 +1,22 @@
 'use client';
 
-import { BaseCard } from './BaseCard';
-
 interface MoodPhraseCardProps {
   phrases: string[];
 }
 
 export function MoodPhraseCard({ phrases }: MoodPhraseCardProps) {
   return (
-    <BaseCard>
-      <div className="space-y-5">
-        <div>
-          <h3 className="text-xs font-bold text-amber-600 uppercase tracking-widest mb-2">
-            Mood & Voice
-          </h3>
-          <h2 className="text-2xl font-bold text-amber-900">Key Phrases</h2>
-        </div>
-
-        <div className="space-y-3">
-          {phrases.map((phrase, index) => (
-            <div
-              key={index}
-              className="px-5 py-4 bg-amber-50 rounded-xl border border-amber-200"
-            >
-              <p className="text-base italic text-amber-900 font-medium">&ldquo;{phrase}&rdquo;</p>
-            </div>
-          ))}
-        </div>
+    <div style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '20px', padding: '22px', boxShadow: '0 8px 24px rgba(120,53,15,0.10)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#0d9488', marginBottom: '10px' }}>
+        Mood & Voice
       </div>
-    </BaseCard>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {phrases.slice(0, 3).map((phrase, index) => (
+          <div key={index} style={{ fontSize: '14px', color: '#78350f', lineHeight: '1.4' }}>
+            {phrase}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

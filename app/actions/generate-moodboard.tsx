@@ -8,18 +8,21 @@ const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const systemPrompt = `You are a creative director and design AI assistant. When given a creative brief, you generate a visual moodboard by calling the appropriate tools in a thoughtful sequence.
+const systemPrompt = `You are a creative director and design AI assistant. When given a creative brief, you MUST generate a complete visual moodboard by calling ALL FOUR tools.
 
-Guidelines:
-- Call tools in this order for the best reveal: palette → mood phrases → fonts → reference images
-- Each brief should produce exactly 4 cards (one of each type)
-- Be creative but intentional - ensure all choices support the creative direction
-- For palettes: Choose 4-6 colors that work together harmoniously
-- For fonts: Suggest real, web-available font names (e.g., "Playfair Display", "Inter", "Crimson Pro")
-- For mood phrases: Create 3-5 short, evocative phrases that capture the vibe
-- For reference images: Provide specific, descriptive search terms that would find relevant imagery
+CRITICAL REQUIREMENTS:
+- You MUST call ALL 4 tools: renderPaletteCard, renderMoodPhraseCard, renderFontPairCard, and renderReferenceImageCard
+- Call them in this order: palette → mood phrases → fonts → reference images
+- NEVER skip any tool - every moodboard requires all 4 card types
+- Each card must be thoughtful and support the creative direction
 
-Remember: The cards will stream in progressively as you call each tool, creating an unfolding reveal experience.`;
+Tool-specific guidelines:
+- renderPaletteCard: Choose 4-6 harmonious hex colors (e.g., "#FF5733")
+- renderMoodPhraseCard: Create 3-5 short, evocative phrases
+- renderFontPairCard: Suggest real, web-available fonts (e.g., "Playfair Display", "Inter")
+- renderReferenceImageCard: Provide 3-5 specific search terms for imagery
+
+IMPORTANT: You must call all 4 tools for every request. Do not stop after calling just one or two tools.`;
 
 export type MoodboardCard =
   | { type: 'palette'; name: string; colors: string[]; description: string }
@@ -52,7 +55,7 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
   try {
     await generateText({
     model: anthropic('claude-sonnet-4-5-20250929'),
-    prompt: userPrompt,
+    prompt: `${userPrompt}\n\nREMINDER: You must call ALL 4 tools (renderPaletteCard, renderMoodPhraseCard, renderFontPairCard, renderReferenceImageCard) to complete this moodboard. Do not stop until all 4 have been called.`,
     system: systemPrompt,
     tools: {
       renderPaletteCard: {

@@ -19,7 +19,7 @@ export function BaseCard({ children, className = '' }: BaseCardProps) {
         damping: 25,
         duration: 0.5,
       }}
-      className={`rounded-xl bg-white p-6 shadow-sm border border-slate-200 ${className}`}
+      className={`rounded-2xl bg-white p-6 shadow-md border border-amber-200 hover:shadow-xl transition-shadow ${className}`}
     >
       {children}
     </motion.div>

@@ -13,25 +13,25 @@ export function FontPairCard({ headingFont, bodyFont, rationale }: FontPairCardP
     <BaseCard>
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <h3 className="text-xs font-semibold text-purple-500 uppercase tracking-wider mb-1">
             Typography
           </h3>
-          <h2 className="text-2xl font-bold text-gray-900">Font Pairing</h2>
+          <h2 className="text-xl font-bold text-slate-800">Font Pairing</h2>
         </div>
 
-        <div className="space-y-4 py-4 border-y border-gray-200">
+        <div className="space-y-4 py-4 border-y border-slate-200">
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Heading</p>
-            <p className="text-3xl font-bold text-gray-900">{headingFont}</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Heading</p>
+            <p className="text-2xl font-bold text-slate-800">{headingFont}</p>
           </div>
 
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Body</p>
-            <p className="text-xl text-gray-700">{bodyFont}</p>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-2">Body</p>
+            <p className="text-lg text-slate-600">{bodyFont}</p>
           </div>
         </div>
 
-        <p className="text-gray-700 leading-relaxed">{rationale}</p>
+        <p className="text-slate-600 leading-relaxed text-sm">{rationale}</p>
       </div>
     </BaseCard>
   );

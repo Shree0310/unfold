@@ -12,16 +12,16 @@ export function ReferenceImageCard({ searchTerms, caption }: ReferenceImageCardP
     <BaseCard>
       <div className="space-y-4">
         <div>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <h3 className="text-xs font-semibold text-violet-500 uppercase tracking-wider mb-1">
             Visual Reference
           </h3>
-          <h2 className="text-2xl font-bold text-gray-900">Inspiration</h2>
+          <h2 className="text-xl font-bold text-slate-800">Inspiration</h2>
         </div>
 
-        <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg p-8 flex items-center justify-center min-h-[200px]">
-          <div className="text-center space-y-2">
+        <div className="bg-slate-50 rounded-lg p-8 flex items-center justify-center min-h-[200px] border border-slate-200">
+          <div className="text-center space-y-3">
             <svg
-              className="w-16 h-16 mx-auto text-gray-400"
+              className="w-14 h-14 mx-auto text-slate-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -37,7 +37,7 @@ export function ReferenceImageCard({ searchTerms, caption }: ReferenceImageCardP
               {searchTerms.map((term, index) => (
                 <span
                   key={index}
-                  className="px-3 py-1 bg-white text-sm text-gray-700 rounded-full shadow-sm"
+                  className="px-3 py-1 bg-white text-xs text-slate-600 rounded-full border border-slate-200"
                 >
                   {term}
                 </span>
@@ -46,7 +46,7 @@ export function ReferenceImageCard({ searchTerms, caption }: ReferenceImageCardP
           </div>
         </div>
 
-        <p className="text-gray-700 leading-relaxed italic">{caption}</p>
+        <p className="text-slate-600 leading-relaxed italic text-sm">{caption}</p>
       </div>
     </BaseCard>
   );

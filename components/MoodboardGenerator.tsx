@@ -29,6 +29,7 @@ export function MoodboardGenerator() {
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [cards, setCards] = useState<PositionedCard[]>([]);
+  const [skeletonCount, setSkeletonCount] = useState(0);
 
   const handleSubmit = async (customPrompt?: string) => {
     const finalPrompt = customPrompt || input;
@@ -36,6 +37,7 @@ export function MoodboardGenerator() {
 
     setInput('');
     setIsGenerating(true);
+    setSkeletonCount(4); // Show 4 skeleton placeholders
 
     try {
       const result = await generateMoodboard(finalPrompt);
@@ -57,10 +59,13 @@ export function MoodboardGenerator() {
       for (let i = 0; i < positionedCards.length; i++) {
         await new Promise(resolve => setTimeout(resolve, i === 0 ? 400 : 550));
         setCards(prev => [...prev, positionedCards[i]]);
+        setSkeletonCount(prev => Math.max(0, prev - 1)); // Reduce skeleton count as cards arrive
       }
+      setSkeletonCount(0);
       setIsGenerating(false);
     } catch (error) {
       console.error('Error generating moodboard:', error);
+      setSkeletonCount(0);
       setIsGenerating(false);
     }
   };
@@ -174,6 +179,35 @@ export function MoodboardGenerator() {
             </div>
           </div>
         )}
+
+        {/* Skeleton Loaders */}
+        {[...Array(skeletonCount)].map((_, index) => {
+          const col = (cards.length + index) % 2;
+          const row = Math.floor((cards.length + index) / 2);
+          const x = col * 450 + 50;
+          const y = row * 300 + 50;
+
+          return (
+            <div
+              key={`skeleton-${index}`}
+              style={{
+                position: 'absolute',
+                left: `${x}px`,
+                top: `${y}px`,
+                width: '380px',
+              }}
+            >
+              <div style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '20px', padding: '22px', boxShadow: '0 8px 24px rgba(120,53,15,0.10)', minHeight: '220px' }}>
+                <div style={{ height: '20px', width: '40%', borderRadius: '6px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', marginBottom: '12px' }} />
+                <div style={{ height: '28px', width: '60%', borderRadius: '8px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', marginBottom: '16px' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ height: '60px', borderRadius: '12px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite' }} />
+                  <div style={{ height: '40px', width: '80%', borderRadius: '8px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite' }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
 
         {/* Draggable Cards */}
         {cards.map((card) => (

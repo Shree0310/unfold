@@ -15,6 +15,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Unfold - AI Moodboard Generator",
   description: "AI reasons, UI streams. Watch your creative vision unfold progressively as each design element arrives in real-time.",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
   openGraph: {
     title: "Unfold - AI Moodboard Generator",
     description: "AI reasons, UI streams. Watch your creative vision unfold progressively as each design element arrives in real-time.",

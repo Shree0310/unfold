@@ -1,6 +1,6 @@
 'use server';
 
-import { generateText } from 'ai';
+import { streamText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { z } from 'zod';
 
@@ -32,17 +32,7 @@ export type MoodboardCard =
 
 export async function generateMoodboard(userPrompt: string): Promise<MoodboardCard[]> {
   const cards: MoodboardCard[] = [];
-
-  // Debug: Comprehensive API key logging
   const apiKey = process.env.ANTHROPIC_API_KEY;
-
-  console.log('=== API KEY DEBUG ===');
-  console.log('API Key exists:', !!apiKey);
-  console.log('API Key length:', apiKey?.length);
-  console.log('API Key first 20 chars:', apiKey?.substring(0, 20));
-  console.log('API Key last 10 chars:', apiKey?.substring(apiKey.length - 10));
-  console.log('All env vars:', Object.keys(process.env).filter(k => k.includes('ANTHROPIC')));
-  console.log('====================');
 
   if (!apiKey) {
     throw new Error('ANTHROPIC_API_KEY is not set in environment variables');
@@ -53,67 +43,70 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
   }
 
   try {
-    await generateText({
-    model: anthropic('claude-sonnet-4-5-20250929'),
-    prompt: `${userPrompt}\n\nREMINDER: You must call ALL 4 tools (renderPaletteCard, renderMoodPhraseCard, renderFontPairCard, renderReferenceImageCard) to complete this moodboard. Do not stop until all 4 have been called.`,
-    system: systemPrompt,
-    tools: {
-      renderPaletteCard: {
-        description: 'Render a color palette card with a name, colors array (hex codes), and description explaining the mood/rationale',
-        inputSchema: z.object({
-          name: z.string().describe('Name of the color palette'),
-          colors: z.array(z.string()).describe('Array of hex color codes (e.g., ["#FF5733", "#C70039"])'),
-          description: z.string().describe('Description of the palette mood and rationale'),
-        }),
-        execute: async (args: { name: string; colors: string[]; description: string }) => {
-          cards.push({ type: 'palette', ...args });
-          return { success: true };
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-5-20250929'),
+      prompt: `${userPrompt}\n\nREMINDER: You must call ALL 4 tools (renderPaletteCard, renderMoodPhraseCard, renderFontPairCard, renderReferenceImageCard) to complete this moodboard. Do not stop until all 4 have been called.`,
+      system: systemPrompt,
+      tools: {
+        renderPaletteCard: {
+          description: 'Render a color palette card with a name, colors array (hex codes), and description explaining the mood/rationale',
+          inputSchema: z.object({
+            name: z.string().describe('Name of the color palette'),
+            colors: z.array(z.string()).describe('Array of hex color codes (e.g., ["#FF5733", "#C70039"])'),
+            description: z.string().describe('Description of the palette mood and rationale'),
+          }),
+          execute: async (args: { name: string; colors: string[]; description: string }) => {
+            const card: MoodboardCard = { type: 'palette', ...args };
+            cards.push(card);
+            return { success: true };
+          },
+        },
+        renderFontPairCard: {
+          description: 'Render a font pairing card showing heading and body font choices with rationale',
+          inputSchema: z.object({
+            headingFont: z.string().describe('Font name for headings'),
+            bodyFont: z.string().describe('Font name for body text'),
+            rationale: z.string().describe('Explanation of why this pairing works'),
+          }),
+          execute: async (args: { headingFont: string; bodyFont: string; rationale: string }) => {
+            const card: MoodboardCard = { type: 'fontPair', ...args };
+            cards.push(card);
+            return { success: true };
+          },
+        },
+        renderMoodPhraseCard: {
+          description: 'Render a card with evocative phrases that capture the creative direction',
+          inputSchema: z.object({
+            phrases: z.array(z.string()).describe('Array of 3-5 short evocative phrases'),
+          }),
+          execute: async (args: { phrases: string[] }) => {
+            const card: MoodboardCard = { type: 'moodPhrase', ...args };
+            cards.push(card);
+            return { success: true };
+          },
+        },
+        renderReferenceImageCard: {
+          description: 'Render a reference image card with search terms and caption',
+          inputSchema: z.object({
+            searchTerms: z.array(z.string()).describe('Array of search terms for finding reference images'),
+            caption: z.string().describe('Caption explaining the visual reference'),
+          }),
+          execute: async (args: { searchTerms: string[]; caption: string }) => {
+            const card: MoodboardCard = { type: 'referenceImage', ...args };
+            cards.push(card);
+            return { success: true };
+          },
         },
       },
-      renderFontPairCard: {
-        description: 'Render a font pairing card showing heading and body font choices with rationale',
-        inputSchema: z.object({
-          headingFont: z.string().describe('Font name for headings'),
-          bodyFont: z.string().describe('Font name for body text'),
-          rationale: z.string().describe('Explanation of why this pairing works'),
-        }),
-        execute: async (args: { headingFont: string; bodyFont: string; rationale: string }) => {
-          cards.push({ type: 'fontPair', ...args });
-          return { success: true };
-        },
-      },
-      renderMoodPhraseCard: {
-        description: 'Render a card with evocative phrases that capture the creative direction',
-        inputSchema: z.object({
-          phrases: z.array(z.string()).describe('Array of 3-5 short evocative phrases'),
-        }),
-        execute: async (args: { phrases: string[] }) => {
-          cards.push({ type: 'moodPhrase', ...args });
-          return { success: true };
-        },
-      },
-      renderReferenceImageCard: {
-        description: 'Render a reference image card with search terms and caption',
-        inputSchema: z.object({
-          searchTerms: z.array(z.string()).describe('Array of search terms for finding reference images'),
-          caption: z.string().describe('Caption explaining the visual reference'),
-        }),
-        execute: async (args: { searchTerms: string[]; caption: string }) => {
-          cards.push({ type: 'referenceImage', ...args });
-          return { success: true };
-        },
-      },
-    },
-  });
+    });
 
-  console.log('AI request completed successfully');
+    // Consume the stream to ensure all tool calls are executed
+    for await (const _ of result.textStream) {
+      // The tool calls happen automatically as the stream is consumed
+      // We just need to iterate through to trigger them
+    }
   } catch (error: any) {
-    console.error('=== ERROR DETAILS ===');
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Status code:', error.statusCode);
-    console.error('Error response:', error.responseBody);
-    console.error('====================');
+    console.error('Error generating moodboard:', error);
     throw error;
   }
 

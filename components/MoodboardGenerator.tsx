@@ -123,6 +123,7 @@ export function MoodboardGenerator() {
     }
   };
 
+
   return (
     <div style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header with Title and Input */}
@@ -130,7 +131,7 @@ export function MoodboardGenerator() {
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
           {/* Logo and Description */}
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontWeight: 700, fontSize: 'clamp(24px, 6vw, 36px)', letterSpacing: '-0.02em', background: 'linear-gradient(135deg,#ea580c,#d97706,#ca8a04)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', marginBottom: '8px' }}>
+            <div style={{ fontWeight: 700, fontSize: 'clamp(24px, 6vw, 36px)', letterSpacing: '-0.02em', backgroundImage: 'linear-gradient(135deg,#ea580c,#d97706,#ca8a04)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent', marginBottom: '8px' }}>
               Unfold
             </div>
             <p style={{ fontSize: 'clamp(13px, 3vw, 15px)', color: '#b45309', margin: 0, maxWidth: '600px', marginLeft: 'auto', marginRight: 'auto', padding: '0 8px' }}>

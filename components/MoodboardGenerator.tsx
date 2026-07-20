@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { domToPng } from 'modern-screenshot';
 import { generateMoodboard, type MoodboardCard, type ToolCallEvent } from '@/app/actions/generate-moodboard';
 import { DraggableCard } from './cards/DraggableCard';
 import { PaletteCard } from './cards/PaletteCard';
@@ -44,6 +45,8 @@ export function MoodboardGenerator() {
   const [toolCalls, setToolCalls] = useState<ToolCallEvent[]>([]);
   const [showToolCalls, setShowToolCalls] = useState(false);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const boardRef = useRef<HTMLDivElement>(null);
 
   // Rotate loading messages every 1.5 seconds while generating
   useEffect(() => {
@@ -136,6 +139,30 @@ export function MoodboardGenerator() {
     }
   };
 
+  const handleExport = async () => {
+    if (!boardRef.current || cards.length === 0) return;
+
+    setIsExporting(true);
+    try {
+      // Capture the board canvas area using modern-screenshot (supports modern CSS)
+      const dataUrl = await domToPng(boardRef.current, {
+        scale: 2,
+        backgroundColor: '#fef9f3',
+      });
+
+      // Download the image
+      const link = document.createElement('a');
+      link.download = `moodboard-${Date.now()}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      setIsExporting(false);
+    } catch (error) {
+      console.error('Error exporting moodboard:', error);
+      setIsExporting(false);
+    }
+  };
+
   const hasAnyCards = cards.length > 0 || isGenerating;
 
   const renderCard = (cardData: MoodboardCard) => {
@@ -202,6 +229,20 @@ export function MoodboardGenerator() {
             >
               {isGenerating ? 'Generating…' : 'Generate'}
             </button>
+            {cards.length > 0 && (
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                style={{ flex: 'none', padding: '12px 20px', border: '1.5px solid #fde68a', borderRadius: '12px', background: '#fff', color: '#78350f', fontWeight: 600, fontSize: 'clamp(14px, 3vw, 15px)', cursor: 'pointer', boxShadow: '0 2px 8px rgba(120,53,15,0.08)', opacity: isExporting ? 0.5 : 1, transition: 'all 0.15s', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px' }}
+                onMouseEnter={(e) => !isExporting && (e.currentTarget.style.boxShadow = '0 4px 12px rgba(120,53,15,0.15)')}
+                onMouseLeave={(e) => !isExporting && (e.currentTarget.style.boxShadow = '0 2px 8px rgba(120,53,15,0.08)')}
+              >
+                <svg style={{ width: '16px', height: '16px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                {isExporting ? 'Exporting…' : 'Export'}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -240,7 +281,7 @@ export function MoodboardGenerator() {
       )}
 
       {/* Board Area - Milanote-style canvas */}
-      <div style={{ position: 'relative', flex: 1, background: 'radial-gradient(circle,rgba(180,83,9,0.12) 1.5px,transparent 1.5px)', backgroundSize: '28px 28px', overflow: 'auto' }}>
+      <div ref={boardRef} style={{ position: 'relative', flex: 1, background: 'radial-gradient(circle,rgba(180,83,9,0.12) 1.5px,transparent 1.5px)', backgroundSize: '28px 28px', overflow: 'auto' }}>
 
         {/* Empty State */}
         {!hasAnyCards && (

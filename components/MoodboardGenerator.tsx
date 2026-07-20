@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { generateMoodboard, type MoodboardCard } from '@/app/actions/generate-moodboard';
+import { generateMoodboard, type MoodboardCard, type ToolCallEvent } from '@/app/actions/generate-moodboard';
 import { DraggableCard } from './cards/DraggableCard';
 import { PaletteCard } from './cards/PaletteCard';
 import { FontPairCard } from './cards/FontPairCard';
@@ -30,6 +30,8 @@ export function MoodboardGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [cards, setCards] = useState<PositionedCard[]>([]);
   const [skeletonCount, setSkeletonCount] = useState(0);
+  const [toolCalls, setToolCalls] = useState<ToolCallEvent[]>([]);
+  const [showToolCalls, setShowToolCalls] = useState(false);
 
   const handleSubmit = async (customPrompt?: string) => {
     const finalPrompt = customPrompt || input;
@@ -42,12 +44,15 @@ export function MoodboardGenerator() {
     try {
       const result = await generateMoodboard(finalPrompt);
 
+      // Store tool calls for the sequence panel
+      setToolCalls(result.toolCalls);
+
       // Convert to positioned cards with centered grid layout
       const isMobile = window.innerWidth < 768;
       const cardSpacing = isMobile ? 360 : 450;
       const cols = isMobile ? 1 : 2;
 
-      const positionedCards: PositionedCard[] = result.map((card, index) => {
+      const positionedCards: PositionedCard[] = result.cards.map((card, index) => {
         const col = index % cols;
         const row = Math.floor(index / cols);
         const gridWidth = cols * cardSpacing;
@@ -123,7 +128,6 @@ export function MoodboardGenerator() {
     }
   };
 
-
   return (
     <div style={{ fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif', height: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header with Title and Input */}
@@ -161,6 +165,39 @@ export function MoodboardGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Tool Call Sequence Panel */}
+      {toolCalls.length > 0 && (
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(252,211,77,0.3)', background: 'rgba(255,255,255,0.95)' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              onClick={() => setShowToolCalls(!showToolCalls)}
+              style={{ padding: '6px 12px', background: '#fff', border: '1px solid #fde68a', borderRadius: '8px', fontSize: '12px', fontWeight: 500, color: '#78350f', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: 'box-shadow 0.15s' }}
+              onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 2px 8px rgba(120,53,15,0.08)'}
+              onMouseLeave={(e) => e.currentTarget.style.boxShadow = ''}
+            >
+              <svg style={{ width: '14px', height: '14px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showToolCalls ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
+              </svg>
+              {showToolCalls ? 'Hide' : 'Show'} Tool Call Sequence
+            </button>
+            {showToolCalls && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', flex: 1 }}>
+                {toolCalls.map((call, index) => (
+                  <div
+                    key={index}
+                    style={{ padding: '4px 10px', background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '6px', fontSize: '11px', fontFamily: 'monospace', color: '#78350f', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <span style={{ fontWeight: 600 }}>{index + 1}.</span>
+                    <span>{call.toolName.replace('render', '').replace('Card', '')}</span>
+                    <span style={{ opacity: 0.6 }}>+{call.timestamp}ms</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Board Area - Milanote-style canvas */}
       <div style={{ position: 'relative', flex: 1, background: 'radial-gradient(circle,rgba(180,83,9,0.12) 1.5px,transparent 1.5px)', backgroundSize: '28px 28px', overflow: 'auto' }}>

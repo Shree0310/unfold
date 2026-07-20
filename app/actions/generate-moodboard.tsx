@@ -30,8 +30,21 @@ export type MoodboardCard =
   | { type: 'moodPhrase'; phrases: string[] }
   | { type: 'referenceImage'; searchTerms: string[]; caption: string };
 
-export async function generateMoodboard(userPrompt: string): Promise<MoodboardCard[]> {
+export interface ToolCallEvent {
+  toolName: string;
+  timestamp: number;
+  duration?: number;
+}
+
+export interface GenerateMoodboardResult {
+  cards: MoodboardCard[];
+  toolCalls: ToolCallEvent[];
+}
+
+export async function generateMoodboard(userPrompt: string): Promise<GenerateMoodboardResult> {
   const cards: MoodboardCard[] = [];
+  const toolCalls: ToolCallEvent[] = [];
+  const startTime = Date.now();
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
@@ -56,6 +69,11 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
             description: z.string().describe('Description of the palette mood and rationale'),
           }),
           execute: async (args: { name: string; colors: string[]; description: string }) => {
+            const callTime = Date.now();
+            toolCalls.push({
+              toolName: 'renderPaletteCard',
+              timestamp: callTime - startTime
+            });
             const card: MoodboardCard = { type: 'palette', ...args };
             cards.push(card);
             return { success: true };
@@ -69,6 +87,11 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
             rationale: z.string().describe('Explanation of why this pairing works'),
           }),
           execute: async (args: { headingFont: string; bodyFont: string; rationale: string }) => {
+            const callTime = Date.now();
+            toolCalls.push({
+              toolName: 'renderFontPairCard',
+              timestamp: callTime - startTime
+            });
             const card: MoodboardCard = { type: 'fontPair', ...args };
             cards.push(card);
             return { success: true };
@@ -80,6 +103,11 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
             phrases: z.array(z.string()).describe('Array of 3-5 short evocative phrases'),
           }),
           execute: async (args: { phrases: string[] }) => {
+            const callTime = Date.now();
+            toolCalls.push({
+              toolName: 'renderMoodPhraseCard',
+              timestamp: callTime - startTime
+            });
             const card: MoodboardCard = { type: 'moodPhrase', ...args };
             cards.push(card);
             return { success: true };
@@ -92,6 +120,11 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
             caption: z.string().describe('Caption explaining the visual reference'),
           }),
           execute: async (args: { searchTerms: string[]; caption: string }) => {
+            const callTime = Date.now();
+            toolCalls.push({
+              toolName: 'renderReferenceImageCard',
+              timestamp: callTime - startTime
+            });
             const card: MoodboardCard = { type: 'referenceImage', ...args };
             cards.push(card);
             return { success: true };
@@ -110,5 +143,5 @@ export async function generateMoodboard(userPrompt: string): Promise<MoodboardCa
     throw error;
   }
 
-  return cards;
+  return { cards, toolCalls };
 }

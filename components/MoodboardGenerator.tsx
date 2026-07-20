@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { generateMoodboard, type MoodboardCard, type ToolCallEvent } from '@/app/actions/generate-moodboard';
 import { DraggableCard } from './cards/DraggableCard';
 import { PaletteCard } from './cards/PaletteCard';
@@ -25,6 +25,17 @@ interface PositionedCard {
   data: MoodboardCard;
 }
 
+const loadingMessages = [
+  'Analyzing your creative brief...',
+  'Thinking about color harmonies...',
+  'Exploring typographic pairings...',
+  'Curating visual references...',
+  'Crafting the perfect palette...',
+  'Considering mood and tone...',
+  'Selecting complementary fonts...',
+  'Finding inspiration images...',
+];
+
 export function MoodboardGenerator() {
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,6 +43,19 @@ export function MoodboardGenerator() {
   const [skeletonCount, setSkeletonCount] = useState(0);
   const [toolCalls, setToolCalls] = useState<ToolCallEvent[]>([]);
   const [showToolCalls, setShowToolCalls] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+
+  // Rotate loading messages every 1.5 seconds while generating
+  useEffect(() => {
+    if (isGenerating) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      }, 2000);
+      return () => clearInterval(interval);
+    } else {
+      setLoadingMessageIndex(0);
+    }
+  }, [isGenerating]);
 
   const handleSubmit = async (customPrompt?: string) => {
     const finalPrompt = customPrompt || input;
@@ -49,22 +73,38 @@ export function MoodboardGenerator() {
 
       // Convert to positioned cards with centered grid layout
       const isMobile = window.innerWidth < 768;
-      const cardSpacing = isMobile ? 360 : 450;
+      const cardWidth = isMobile ? 320 : 380;
+      const cardSpacing = isMobile ? cardWidth + 40 : 450;
       const cols = isMobile ? 1 : 2;
 
       const positionedCards: PositionedCard[] = result.cards.map((card, index) => {
         const col = index % cols;
         const row = Math.floor(index / cols);
-        const gridWidth = cols * cardSpacing;
-        const startX = (window.innerWidth / 2) - (gridWidth / 2);
-        const startY = 100;
 
-        return {
-          id: `card-${Date.now()}-${index}`,
-          x: startX + (col * cardSpacing),
-          y: startY + (row * 300),
-          data: card,
-        };
+        if (isMobile) {
+          // Mobile: center cards vertically, one after another
+          const startX = (window.innerWidth - cardWidth) / 2;
+          const startY = 50;
+
+          return {
+            id: `card-${Date.now()}-${index}`,
+            x: startX,
+            y: startY + (index * 280),
+            data: card,
+          };
+        } else {
+          // Desktop: 2-column grid
+          const gridWidth = cols * cardSpacing;
+          const startX = (window.innerWidth / 2) - (gridWidth / 2);
+          const startY = 100;
+
+          return {
+            id: `card-${Date.now()}-${index}`,
+            x: startX + (col * cardSpacing),
+            y: startY + (row * 300),
+            data: card,
+          };
+        }
       });
 
       // Simulate streaming by revealing cards one-by-one
@@ -226,42 +266,67 @@ export function MoodboardGenerator() {
           </div>
         )}
 
-        {/* Skeleton Loaders */}
-        {[...Array(skeletonCount)].map((_, index) => {
-          const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-          const cardWidth = isMobile ? 320 : 380;
-          const cardSpacing = isMobile ? 360 : 450;
-          const cols = isMobile ? 1 : 2;
-
-          const col = (cards.length + index) % cols;
-          const row = Math.floor((cards.length + index) / cols);
-          const gridWidth = cols * cardSpacing;
-          const startX = (typeof window !== 'undefined' ? window.innerWidth / 2 : 800) - (gridWidth / 2);
-          const startY = 100;
-          const x = startX + (col * cardSpacing);
-          const y = startY + (row * 300);
-
-          return (
-            <div
-              key={`skeleton-${index}`}
-              style={{
-                position: 'absolute',
-                left: `${x}px`,
-                top: `${y}px`,
-                width: `${cardWidth}px`,
-              }}
-            >
-              <div style={{ background: '#fff', border: '1px solid #fde68a', borderRadius: '20px', padding: '22px', boxShadow: '0 8px 24px rgba(120,53,15,0.10)', minHeight: '220px' }}>
-                <div style={{ height: '20px', width: '40%', borderRadius: '6px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', marginBottom: '12px' }} />
-                <div style={{ height: '28px', width: '60%', borderRadius: '8px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite', marginBottom: '16px' }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ height: '60px', borderRadius: '12px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite' }} />
-                  <div style={{ height: '40px', width: '80%', borderRadius: '8px', background: 'linear-gradient(90deg,#fef3c7 25%,#fde68a 50%,#fef3c7 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s ease-in-out infinite' }} />
-                </div>
-              </div>
+        {/* Loading State - Single centered indicator */}
+        {skeletonCount > 0 && cards.length === 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center',
+            maxWidth: '400px',
+            padding: '0 20px'
+          }}>
+            {/* Animated dots */}
+            <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #f97316, #f59e0b)',
+                    animation: `bounce 1.4s ease-in-out ${i * 0.2}s infinite`
+                  }}
+                />
+              ))}
             </div>
-          );
-        })}
+
+            {/* Status text */}
+            <div style={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: '#78350f',
+              marginBottom: '8px'
+            }}>
+              AI is designing your moodboard
+            </div>
+            <div style={{
+              fontSize: '14px',
+              color: '#b45309',
+              lineHeight: '1.5'
+            }}>
+              {loadingMessages[loadingMessageIndex]}
+            </div>
+
+            {/* Progress bar */}
+            <div style={{
+              marginTop: '20px',
+              height: '4px',
+              background: '#fde68a',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #f97316, #f59e0b)',
+                animation: 'progress 2s ease-in-out infinite',
+                borderRadius: '2px'
+              }} />
+            </div>
+          </div>
+        )}
 
         {/* Draggable Cards */}
         {cards.map((card) => {
@@ -285,9 +350,27 @@ export function MoodboardGenerator() {
       </div>
 
       <style jsx>{`
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+        @keyframes bounce {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+
+        @keyframes progress {
+          0% {
+            transform: translateX(-100%);
+          }
+          50% {
+            transform: translateX(0%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
         }
 
         @media (max-width: 768px) {
